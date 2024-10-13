@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var agora = new Date();
+            var dataFormatada = agora.toISOString().slice(0, 16);
+
+            document.getElementById("cad_inicio").setAttribute("min", dataFormatada);
+            document.getElementById("cad_fim").setAttribute("min", dataFormatada);
+
+            var calendarioEl = document.getElementById("calendario");
+            var calendario = new FullCalendar.Calendar(calendarioEl, {
+                locale: "pt-br",
+                initialView: "dayGridMonth",
+                selectable: true,
+                headerToolbar: {
+                    left: "prev,next today",
+                    center: "title",
+                    right: "dayGridMonth,timeGridWeek",
+                },
+                buttonText: {
+                    today: "Hoje",
+                    month: "Mês",
+                    week: "Semana",
+                    day: "Dia",
+                },
+                views: {
+                    dayGrid: {
+                        titleFormat: { day: "numeric", month: "long", year: "numeric" },
+                    },
+                    timeGrid: {
+                        titleFormat: { day: "numeric", month: "long", year: "numeric" },
+                    },
+                },
+                events: [
+                    {
+                        title: "Reunião",
+                        start: "2024-09-12T14:30:00",
+                        end: "2024-09-12T16:30:00",
+                        extendedProps: { status: "feito", laboratorio: "#0071c5" },
+                    },
+                    {
+                        title: "Festa de Aniversário",
+                        start: "2024-09-13T07:00:00",
+                        end: "2024-09-13T08:00:00",
+                        extendedProps: { laboratorio: "#FFD700" },
+                    },
+                ],
+            });
+
+            calendario.render();
+
+            let eventosCadastrados = [
+                {
+                    title: "Reunião",
+                    start: "2024-09-12T14:30:00",
+                    end: "2024-09-12T16:30:00",
+                    laboratorio: "#0071c5",
+                },
+                {
+                    title: "Festa de Aniversário",
+                    start: "2024-09-13T07:00:00",
+                    end: "2024-09-13T08:00:00",
+                    laboratorio: "#FFD700",
+                },
+            ];
+
+            document.getElementById("btnCadastrarEvento").addEventListener("click", function (event) {
+                event.preventDefault();
+
+                var titulo = document.getElementById("titulo").value;
+                var inicio = document.getElementById("cad_inicio").value;
+                var fim = document.getElementById("cad_fim").value;
+                var cor = document.getElementById("cad_cor").value;
+
+                if (titulo && inicio && fim && cor) {
+                    if (new Date(inicio) < new Date(fim)) {
+                        // Verificar conflito de horário para o mesmo laboratório
+                        var conflito = eventosCadastrados.some(function (evento) {
+                            return (
+                                evento.laboratorio === cor &&
+                                (new Date(inicio) < new Date(evento.end) && new Date(fim) > new Date(evento.start))
+                            );
+                        });
+
+                        if (conflito) {
+                            alert("Não é possível agendar em um horário que já está agendado para este laboratório.");
+                        } else {
+                            calendario.addEvent({
+                                title: titulo,
+                                start: inicio,
+                                end: fim,
+                                backgroundColor: cor,
+                                borderColor: cor,
+                                allday: false,
+                            });
+
+                            eventosCadastrados.push({
+                                title: titulo,
+                                start: inicio,
+                                end: fim,
+                                laboratorio: cor,
+                            });
+
+                            alert("Evento cadastrado com sucesso!");
+                            document.getElementById("titulo").value = "";
+                            document.getElementById("cad_inicio").value = "";
+                            document.getElementById("cad_fim").value = "";
+                            document.getElementById("cad_cor").value = "";
+                        }
+                    } else {
+                        alert("A data de término deve ser posterior à data de início.");
+                    }
+                } else {
+                    alert("Por favor, preencha todos os campos.");
+                }
+            });
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 bg-[url('./img/purple.jpg')] bg-cover mt-20 mx-auto">
+    <h1 class="text-center text-white text-3xl mb-2">Agendamento de Laboratórios</h1>
+    <div class="max-w-7xl mx-auto p-6">
+        <div id="calendario" class="shadow-lg rounded-lg bg-white p-4 border border-violet-500 scale-60"></div>
+    </div>
+
+    <div class="max-w-lg mx-auto mt-10 bg-violet-500 p-6 rounded-lg shadow-lg border border-violet-300">
+        <h1 id="cadastrarModalLabel" class="text-2xl font-semibold text-center mb-6 text-white">Cadastrar Reserva</h1>
+        <form method="POST" id="formCadastrarEvento">
+            <div class="mb-4">
+                <label for="titulo" class="block text-sm font-medium text-white mb-1">Título</label>
+                <input type="text" name="titulo" id="titulo" class="w-full p-2 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Título do evento">
+            </div>
+
+            <div class="mb-4">
+                <label for="cad_inicio" class="block text-sm font-medium text-white mb-1">Data e Horário de Início</label>
+                <input type="datetime-local" name="cad_inicio" id="cad_inicio" class="w-full p-2 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+            </div>
+
+            <div class="mb-4">
+                <label for="cad_fim" class="block text-sm font-medium text-white mb-1">Data e Horário de Término</label>
+                <input type="datetime-local" name="cad_fim" id="cad_fim" class="w-full p-2 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+            </div>
+
+            <div class="mb-6">
+                <label for="cad_cor" class="block text-sm font-medium text-white mb-1">Laboratório</label>
+                <select name="cad_cor" id="cad_cor" class="w-full p-2 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    <option value="">Selecione</option>
+                    <option value="#FFD700">Laboratório Raul Bonfim</option>
+                    <option value="#0071c5">Laboratório 2</option>
+                    <option value="#FF4500">Laboratório 3</option>
+                </select>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" name="btnCadastrarEvento" id="btnCadastrarEvento" class="bg-white text-violet-600 px-6 py-2 rounded-lg hover:bg-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-500">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+    <footer>
+        <div class="text-center text-24 m-10 text-white">
+            <p>© Direitos reservados à atividade avaliativa</p>
+        </div>
+    </footer>
+</body>
+</html>
